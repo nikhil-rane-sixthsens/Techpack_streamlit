@@ -20,6 +20,7 @@ def main():
                 json_response = response.json()
                 st.success("File processed successfully!")
                 st.json(json_response)
+                print("success")
             else:
                 st.error("Failed to process file.")
                 st.write(response.json())
