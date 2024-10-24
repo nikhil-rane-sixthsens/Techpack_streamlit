@@ -49,7 +49,7 @@ def main():
                 files = {'file': (uploaded_file.name, uploaded_file.getvalue(), 'application/pdf')}
                 data = {'module_name': module_name}
                 # response = requests.post('http://localhost:5000/upload', files=files, data=data)
-                response = requests.post('http://44.201.117.143/upload', files=files, data=data)
+                response = requests.post('http://44.202.89.219/upload', files=files, data=data)
             if response.status_code == 200:
                 json_response = response.json()
                 st.success("File processed successfully!")
