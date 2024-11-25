@@ -33,6 +33,46 @@ if st.button("Extract"):
                 # Safely display JSON in the Streamlit app
                 st.success("Extraction successful!")
                 st.json(result)
+
+                # Extract style name and description from the result
+                style_name = result.get("style_name", "Default Style Name")  # Replace with actual key if different
+                article_description = result.get("description", "Default Description")  # Replace with actual key if different
+
+                # Define the headers for the second API call
+                headers = {
+                    "Guid": "30a00b95-75f6-4fea-82a6-21512196363e",
+                    "Productcatcode": "01"
+                }
+
+                # API URL for updating
+                update_api_url = "https://coreapi.wfxondemand.com/Item/api/v1/Item/1000180673?callFrom=Item"
+
+                # Update style name
+                style_name_payload = {
+                    "article_name": style_name,
+                    "parentcolid": "article_name"
+                }
+                style_name_response = requests.put(update_api_url, headers=headers, json=style_name_payload)
+
+                if style_name_response.status_code == 200:
+                    st.success("Style name updated successfully!")
+                else:
+                    st.error(f"Failed to update style name: {style_name_response.status_code}")
+                    st.write("Response content:", style_name_response.text)
+
+                # Update article description
+                article_description_payload = {
+                    "article_description": article_description,
+                    "parentcolid": "article_description"
+                }
+                article_description_response = requests.put(update_api_url, headers=headers, json=article_description_payload)
+
+                if article_description_response.status_code == 200:
+                    st.success("Article description updated successfully!")
+                else:
+                    st.error(f"Failed to update article description: {article_description_response.status_code}")
+                    st.write("Response content:", article_description_response.text)
+            
             except json.JSONDecodeError:
                 st.error("Failed to decode JSON response.")
                 st.write("Response content:", response.text)  # Debugging fallback
