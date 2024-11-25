@@ -35,8 +35,8 @@ if st.button("Extract"):
                 st.json(result)
 
                 # Extract style name and description from the result
-                style_name = result.get("style_name", "Default Style Name")  # Replace with actual key if different
-                article_description = result.get("description", "Default Description")  # Replace with actual key if different
+                style_name = result.get("Style Name", "Default Style Name")  # Replace with actual key if different
+                article_description = result.get("Description", "Default Description")  # Replace with actual key if different
 
                 # Define the headers for the second API call
                 headers = {
@@ -72,7 +72,8 @@ if st.button("Extract"):
                 else:
                     st.error(f"Failed to update article description: {article_description_response.status_code}")
                     st.write("Response content:", article_description_response.text)
-            
+
+
             except json.JSONDecodeError:
                 st.error("Failed to decode JSON response.")
                 st.write("Response content:", response.text)  # Debugging fallback
