@@ -1,66 +1,43 @@
 import streamlit as st
+import base64
 import requests
-import pandas as pd
-import io
+import json
 
-# Function to convert to a DataFrame
-def convert_to_dataframe(data):
-    # Prepare dataframes for each key
-    dataframes = {}
+# Streamlit UI
+st.title("PDF Style Extractor")
 
-    for key in data:
-        rows = []
-        for entry in data[key]:
-            row = {"Client Pdf Fields": entry["Client Pdf Fields"], "WFX Fields": entry["WFX Fields"]}
-            # Handling for cases where 'Values' is a list of dictionaries
-            if isinstance(entry["Values"], list):
-                for sub_entry in entry["Values"]:
-                    row.update(sub_entry)  # Add all subfields as columns
-            else:
-                row["Values"] = entry["Values"]  # Add single value
-            rows.append(row)
+uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
+if uploaded_file:
+    st.write("File uploaded successfully. Click 'Extract' to process.")
 
-        # Create dataframe
-        dataframes[key] = pd.DataFrame(rows)
+if st.button("Extract"):
+    if uploaded_file:
+        # Read and encode the uploaded file in base64
+        pdf_bytes = uploaded_file.read()
+        pdf_base64 = base64.b64encode(pdf_bytes).decode("utf-8")
 
-    return dataframes
+        # Send the request to the Flask API
+        api_url = "http://127.0.0.1:5000/process-pdf"  # Update with your API endpoint if different
+        payload = {"file_base64": pdf_base64}
 
-def json_to_excel(json_data):
-    dataframes = convert_to_dataframe(json_data)
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        for sheet_name, df in dataframes.items():
-            df.to_excel(writer, sheet_name=sheet_name[:31], index=False)
-    output.seek(0)
-    return output.read()
+        # Spinner while processing
+        with st.spinner("Processing..."):
+            response = requests.post(api_url, json=payload)
 
-def main():
-    st.title("Techpack API")
-    uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
+        # Display the response
+        if response.status_code == 200:
+            try:
+                # Ensure the response is parsed as JSON
+                result = response.json()
 
-    # Define a list of module names for the dropdown
-    module_names = ["Nordstrom", "Walmart", "Carhartt", "GAP", "Chico", "HNM"]
-    # Use selectbox for module_name selection
-    module_name = st.selectbox("Select the module name", module_names)
-
-    if st.button("Upload and Process"):
-        if uploaded_file is not None:
-            with st.spinner("Processing..."):
-                files = {'file': (uploaded_file.name, uploaded_file.getvalue(), 'application/pdf')}
-                data = {'module_name': module_name}
-                # response = requests.post('http://localhost:5000/upload', files=files, data=data)
-                response = requests.post('http://44.202.89.219/upload', files=files, data=data)
-            if response.status_code == 200:
-                json_response = response.json()
-                st.success("File processed successfully!")
-                json_data = json_response['json']
-                print(json_data)
-                # Convert JSON data to Excel
-                excel_bytes = json_to_excel(json_data)
-                st.download_button(label="Download Excel", data=excel_bytes, file_name='data.xlsx', mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            else:
-                st.error("Failed to process file.")
-                st.write(response.json())
-
-if __name__ == "__main__":
-    main()
+                # Safely display JSON in the Streamlit app
+                st.success("Extraction successful!")
+                st.json(result)
+            except json.JSONDecodeError:
+                st.error("Failed to decode JSON response.")
+                st.write("Response content:", response.text)  # Debugging fallback
+        else:
+            st.error(f"API Error: {response.status_code}")
+            st.write("Response content:", response.text)
+    else:
+        st.error("Please upload a PDF file first.")
