@@ -17,7 +17,7 @@ if st.button("Extract"):
         pdf_base64 = base64.b64encode(pdf_bytes).decode("utf-8")
 
         # Send the request to the Flask API
-        api_url = "http://127.0.0.1:5000/process-pdf"  # Update with your API endpoint if different
+        api_url = "https://34.203.252.31/process-pdf"  # Update with your API endpoint if different
         payload = {"file_base64": pdf_base64}
 
         # Spinner while processing
